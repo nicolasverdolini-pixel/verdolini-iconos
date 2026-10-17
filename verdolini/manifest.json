@@ -1,0 +1,2 @@
+{ "name": "Verdolini", "short_name": "Verdolini", "start_url": "./", "display": "standalone", "background_color": "#2A4A45", "theme_color": "#2A4A45",
+  "icons": [ { "src": "../verdolini-192.png", "sizes": "192x192", "type": "image/png" }, { "src": "../verdolini-512.png", "sizes": "512x512", "type": "image/png" } ] }
