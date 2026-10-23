@@ -14,10 +14,47 @@
 <meta name="apple-mobile-web-app-title" content="Verdolini">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2A4A45">
-<style>html,body{margin:0;height:100%;background:#2A4A45}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}</style>
+<style>html,body{margin:0;height:100%;background:#2A4A45}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}#av{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 14px);transform:translateX(-50%);width:min(380px,calc(100% - 32px));background:#fff;color:#1A2E2B;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.3);padding:16px;font:14px -apple-system,system-ui,sans-serif;z-index:10;display:none}#av b{display:block;font-size:15px;margin-bottom:6px}#av p{margin:0 0 12px;color:#4A6560;line-height:1.4}#av .bt{display:flex;gap:8px;justify-content:flex-end}#av button{border:0;border-radius:8px;padding:9px 14px;font:600 14px -apple-system,system-ui,sans-serif;cursor:pointer}#av .si{background:#3C695D;color:#fff}#av .no{background:#F5F2EE;color:#1A2E2B}</style>
 </head>
 <body>
 <!-- Acceso directo al panel: muestra el panel de Apps Script a pantalla completa -->
 <iframe src="https://script.google.com/macros/s/AKfycbxFHPzGS-5Vb-VPF1ZK0muAvtb7Z7IiQzJbxD0ZMCNGZtWNY3aYHRYc5e5dOjJ2BALA/exec" allow="clipboard-write" title="Verdolini"></iframe>
+<div id="av"><b id="avT">🔔 Avisos del panel</b><p id="avP"></p><div class="bt"><button class="no" id="avNo">Ahora no</button><button class="si" id="avSi">Activar</button></div></div>
+<script>
+// Avisos (Web Push): el panel nos pasa una firma de quién es; acá pedimos el permiso y anotamos el aparato.
+(function () {
+  var NOMBRES = { nicolas: 'Nicolás', natalia: 'Nati', antonella: 'Anto' }, pedido = null;
+  var av = document.getElementById('av'), P = document.getElementById('avP'), si = document.getElementById('avSi'), no = document.getElementById('avNo');
+  var reg = ('serviceWorker' in navigator) ? navigator.serviceWorker.register('sw.js') : null;
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent), instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  function cartel(txt, conBoton) { P.textContent = txt; si.style.display = conBoton ? '' : 'none'; no.textContent = conBoton ? 'Ahora no' : 'Cerrar'; av.style.display = 'block'; }
+  function bytes(b64) { var s = atob(b64.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((b64.length + 3) % 4)); return Uint8Array.from(s, function (c) { return c.charCodeAt(0); }); }
+  window.addEventListener('message', function (e) {
+    if (!/\.googleusercontent\.com$|^https:\/\/script\.google\.com$/.test(e.origin)) return;
+    var d = e.data || {}; if (d.tipo !== 'verdolini-avisos' || d.accion !== 'activar') return;
+    pedido = d;
+    if (!reg || !('PushManager' in window) || !('Notification' in window)) return cartel(ios && !instalada ? 'En el iPhone primero agregá el panel a la pantalla de inicio (Compartir → Agregar a inicio) y abrilo desde el ícono.' : 'Este navegador no permite avisos. Probá con Chrome.', false);
+    cartel('¿Activar los avisos de ' + (NOMBRES[d.usuario] || d.usuario) + ' en este aparato? Te van a llegar como notificación.', true);
+  });
+  no.onclick = function () { av.style.display = 'none'; };
+  si.onclick = function () {
+    var d = pedido; if (!d) return;
+    si.disabled = true; P.textContent = 'Activando...';
+    Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') throw new Error('No diste permiso. Habilitá las notificaciones para este sitio en los ajustes.');
+      return reg.then(function (r) { return navigator.serviceWorker.ready; });
+    }).then(function (r) {
+      return r.pushManager.getSubscription().then(function (s) { return s || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes(d.clave) }); });
+    }).then(function (sub) {
+      var aparato = (ios ? 'iPhone' : /Android/.test(navigator.userAgent) ? 'Android' : 'Compu') + (instalada ? ' (ícono)' : '');
+      return fetch(d.url + '/suscribir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario: d.usuario, exp: d.exp, firma: d.firma, suscripcion: sub.toJSON(), aparato: aparato }) }).then(function (r) { return r.json(); });
+    }).then(function (r) {
+      si.disabled = false;
+      if (r.error) throw new Error(r.error);
+      cartel('✅ Listo. Te mandé uno de prueba: debería llegarte en unos segundos.', false);
+    }).catch(function (err) { si.disabled = false; cartel('⚠️ ' + (err.message || err), false); });
+  };
+})();
+</script>
 </body>
 </html>
