@@ -18,6 +18,13 @@
 </head>
 <body>
 <!-- Acceso directo al panel: muestra el panel de Apps Script a pantalla completa -->
-<iframe src="https://script.google.com/macros/s/AKfycbwIVAjwtJ6NWHRI1M3PUpiYgRtLFITXyR3ZJ2J13Pfi6BNNZ4jIgMK2-oMQgEb5eWWT/exec" allow="clipboard-write" title="Casa"></iframe>
+<iframe id="panel" allow="clipboard-write" title="Casa"></iframe>
+<script>
+// Link personal (?k=...): se guarda en este celu y el panel entra sin pedir clave
+var PANEL='https://script.google.com/macros/s/AKfycbwIVAjwtJ6NWHRI1M3PUpiYgRtLFITXyR3ZJ2J13Pfi6BNNZ4jIgMK2-oMQgEb5eWWT/exec';
+var k=new URLSearchParams(location.search).get('k')||new URLSearchParams(location.hash.slice(1)).get('k')||'';
+try{ if(k) localStorage.setItem('casa_k',k); else k=localStorage.getItem('casa_k')||''; }catch(e){}
+document.getElementById('panel').src=PANEL+(k?'?k='+encodeURIComponent(k):'');
+</script>
 </body>
 </html>
