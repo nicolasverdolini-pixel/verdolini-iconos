@@ -16,6 +16,7 @@
 </head>
 <body>
 <!-- Portal de clientes (inquilinos y propietarios) a pantalla completa -->
-<iframe src="https://script.google.com/macros/s/AKfycbxFHPzGS-5Vb-VPF1ZK0muAvtb7Z7IiQzJbxD0ZMCNGZtWNY3aYHRYc5e5dOjJ2BALA/exec?p=portal" title="Verdolini — Portal de clientes"></iframe>
+<iframe id="pf" src="https://script.google.com/macros/s/AKfycbxFHPzGS-5Vb-VPF1ZK0muAvtb7Z7IiQzJbxD0ZMCNGZtWNY3aYHRYc5e5dOjJ2BALA/exec?p=portal" title="Verdolini — Portal de clientes"></iframe>
+<script>if (/[?&]demo=1/.test(location.search)) document.getElementById('pf').src += '&demo=1';</script>
 </body>
 </html>
